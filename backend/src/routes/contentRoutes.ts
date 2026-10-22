@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ContentController } from '../controllers/ContentController';
-import { authMiddleware } from '../middlewares/authMiddleware';
+import { authMiddleware, adminMiddleware } from '../middlewares/authMiddleware';
 
 const router = Router();
 
@@ -15,16 +15,16 @@ router.get('/', ContentController.getAll);
 router.get('/:id', ContentController.getById);
 
 // ==========================================
-// Rotas Protegidas (Apenas usuários autenticados na Área Administrativa)
+// Rotas Protegidas (Apenas Administradores)
 // ==========================================
 
 // POST /api/conteudos - Cadastra novo conteúdo
-router.post('/', authMiddleware, ContentController.create);
+router.post('/', authMiddleware, adminMiddleware, ContentController.create);
 
 // PUT /api/conteudos/:id - Edita conteúdo e imagem
-router.put('/:id', authMiddleware, ContentController.update);
+router.put('/:id', authMiddleware, adminMiddleware, ContentController.update);
 
 // DELETE /api/conteudos/:id - Exclui conteúdo e imagem
-router.delete('/:id', authMiddleware, ContentController.delete);
+router.delete('/:id', authMiddleware, adminMiddleware, ContentController.delete);
 
 export default router;

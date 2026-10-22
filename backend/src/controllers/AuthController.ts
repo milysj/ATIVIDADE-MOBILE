@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
 
 const gerarToken = (id: string, role: string): string => {
-  const secret = process.env.JWT_SECRET || 'chave_secreta_super_segura_para_jwt_token';
+  const secret = process.env.JWT_SECRET || 'eunaoseioquecolocaraquisecreto';
   return jwt.sign({ id, role }, secret, { expiresIn: '7d' });
 };
 
@@ -15,7 +15,7 @@ export class AuthController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { nome, email, senha, telefone, cpf, imagem } = req.body;
+      const { nome, email, senha, telefone, cpf, imagem, role } = req.body;
 
       if (!nome || !email || !senha) {
         res.status(400).json({
@@ -35,6 +35,8 @@ export class AuthController {
         return;
       }
 
+      const roleFinal = role === 'admin' ? 'admin' : 'user';
+
       const novoUsuario = new User({
         nome,
         email,
@@ -42,7 +44,7 @@ export class AuthController {
         telefone: telefone || '',
         cpf: cpf || '',
         imagem: imagem || '',
-        role: 'admin',
+        role: roleFinal,
       });
 
       await novoUsuario.save();
@@ -69,6 +71,7 @@ export class AuthController {
   }
 
   // POST /api/auth/login
+  
   public static async login(
     req: Request,
     res: Response,
@@ -85,7 +88,8 @@ export class AuthController {
         return;
       }
 
-      const usuario = await User.findOne({ email });
+      const emailLimpo = email.trim().toLowerCase();
+      const usuario = await User.findOne({ email: emailLimpo });
       if (!usuario) {
         res.status(401).json({
           sucesso: false,

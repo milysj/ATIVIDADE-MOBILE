@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { Avatar, Text, IconButton, Portal, Dialog, Button } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -6,27 +6,33 @@ import { useAuth } from './services/AuthContext';
 
 const CabecalhoMenu = () => {
   const navigation = useNavigation();
-  const { usuario, isAutenticado, logout } = useAuth();
+  const { usuario, isAutenticado, isAdmin, logout } = useAuth();
   const [dialogSair, setDialogSair] = useState(false);
 
-  const navigateTo = (tela) => {
-    const parent = navigation.getParent();
-    if (parent) {
-      parent.navigate(tela);
-    } else {
-      navigation.navigate(tela);
+  const navigateTo = (tela, params) => {
+    try {
+      navigation.closeDrawer();
+    } catch (e) {}
+
+    try {
+      navigation.navigate(tela, params);
+    } catch (e) {
+      const parent = navigation.getParent();
+      if (parent) {
+        parent.navigate(tela, params);
+      }
     }
   };
 
   const confirmarSaida = () => {
     setDialogSair(false);
     logout();
-    navigateTo("Acesso");
+    navigateTo('Acesso');
   };
 
   return (
     <View style={styles.container}>
-      {/* Área do usuário */}
+      {/* Área de Perfil do Usuário */}
       <Pressable 
         style={styles.usuario} 
         onPress={() => {
@@ -37,104 +43,106 @@ const CabecalhoMenu = () => {
           }
         }}
       >
-        {/* Avatar */}
         <Avatar.Icon
-          size={65}
-          icon="account"
+          size={58}
+          icon={isAdmin ? 'crown' : 'account'}
           style={styles.avatar}
+          color="#0F1015"
         />
 
-        {/* Nome e e-mail */}
         <View style={styles.informacoes}>
-          <Text
-            variant="titleMedium"
-            style={styles.nome}
-          >
+          <Text variant="titleMedium" style={styles.nome} numberOfLines={1}>
             {isAutenticado ? usuario?.nome : 'Visitante'}
           </Text>
 
-          <Text
-            variant="bodyMedium"
-            style={styles.email}
-            numberOfLines={1}
-          >
+          {/* Badge de Nível de Usuário */}
+          <View style={[styles.roleBadge, isAdmin ? styles.roleBadgeAdmin : styles.roleBadgeUser]}>
+            <Text style={[styles.roleText, isAdmin ? styles.roleTextAdmin : styles.roleTextUser]}>
+              {isAdmin ? '👑 ADMINISTRADOR' : isAutenticado ? '👤 USUÁRIO PADRÃO' : 'VISITANTE'}
+            </Text>
+          </View>
+
+          <Text variant="bodySmall" style={styles.email} numberOfLines={1}>
             {isAutenticado ? usuario?.email : 'Toque para fazer login'}
           </Text>
         </View>
       </Pressable>
 
-      {/* Área do perfil */}
-      {isAutenticado && (
-        <Pressable style={styles.perfil} onPress={() => navigateTo('Perfil')}>
-          <Text variant="bodyMedium" style={styles.perfilTexto}>
-            Meu perfil
-          </Text>
-          <IconButton
-            icon="account"
-            iconColor="white"
-            size={24}
-            onPress={() => navigateTo('Perfil')}
-          />
+      {/* PAINEL DE ADMINISTRAÇÃO (Exclusivo para Administrador) */}
+      {isAdmin && (
+        <Pressable 
+          style={[styles.menuItem, styles.adminMenuItem]} 
+          onPress={() => navigateTo('Admin')}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <IconButton icon="shield-crown" iconColor="#0F1015" size={20} style={{ margin: 0, marginRight: 8 }} />
+            <Text style={styles.adminMenuTexto}>
+              Painel de Administração
+            </Text>
+          </View>
+          <IconButton icon="chevron-right" iconColor="#0F1015" size={20} style={{ margin: 0 }} />
         </Pressable>
       )}
 
-      {/* Área da Pesquisa */}
-      <Pressable style={styles.perfil} onPress={() => navigateTo('Pesquisa')}>
-        <Text variant="bodyMedium" style={styles.perfilTexto}>
-          Pesquisa
-        </Text>
-        <IconButton
-          icon="magnify"
-          iconColor="white"
-          size={24}
-          onPress={() => navigateTo('Pesquisa')}
-        />
+      {/* Menu: Meu Perfil */}
+      {isAutenticado && (
+        <Pressable style={styles.menuItem} onPress={() => navigateTo('Perfil')}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <IconButton icon="account-cog" iconColor="#F2A900" size={20} style={{ margin: 0, marginRight: 8 }} />
+            <Text style={styles.menuTexto}>Meu perfil</Text>
+          </View>
+          <IconButton icon="chevron-right" iconColor="#8A8D9F" size={20} style={{ margin: 0 }} />
+        </Pressable>
+      )}
+
+      {/* Menu: Pesquisa */}
+      <Pressable style={styles.menuItem} onPress={() => navigateTo('Pesquisa')}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <IconButton icon="magnify" iconColor="#F2A900" size={20} style={{ margin: 0, marginRight: 8 }} />
+          <Text style={styles.menuTexto}>Pesquisar no catálogo</Text>
+        </View>
+        <IconButton icon="chevron-right" iconColor="#8A8D9F" size={20} style={{ margin: 0 }} />
       </Pressable>
 
-      {/* Se não autenticado, opção para entrar */}
+      {/* Menu: Login ou Sair */}
       {!isAutenticado ? (
-        <Pressable style={styles.perfil} onPress={() => navigateTo('Acesso')}>
-          <Text variant="bodyMedium" style={styles.perfilTexto}>
-            Entrar / Cadastrar
-          </Text>
-          <IconButton
-            icon="login"
-            iconColor="white"
-            size={24}
-            onPress={() => navigateTo('Acesso')}
-          />
+        <Pressable style={styles.menuItem} onPress={() => navigateTo('Acesso')}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <IconButton icon="login" iconColor="#F2A900" size={20} style={{ margin: 0, marginRight: 8 }} />
+            <Text style={styles.menuTexto}>Entrar / Criar Conta</Text>
+          </View>
+          <IconButton icon="chevron-right" iconColor="#8A8D9F" size={20} style={{ margin: 0 }} />
         </Pressable>
       ) : (
-        /* Área do sair */
-        <Pressable style={styles.perfil} onPress={() => setDialogSair(true)}>
-          <Text variant="bodyMedium" style={styles.perfilTexto}>
-            Sair
-          </Text>
-          <IconButton
-            icon="logout"
-            iconColor="white"
-            size={24}
-            onPress={() => setDialogSair(true)}
-          />
+        <Pressable style={styles.menuItem} onPress={() => setDialogSair(true)}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <IconButton icon="logout" iconColor="#FF5252" size={20} style={{ margin: 0, marginRight: 8 }} />
+            <Text style={[styles.menuTexto, { color: '#FF5252' }]}>Sair da conta</Text>
+          </View>
+          <IconButton icon="chevron-right" iconColor="#FF5252" size={20} style={{ margin: 0 }} />
         </Pressable>
       )}
 
-      {/* Dialog de confirmação */}
+      {/* Diálogo de confirmação de saída */}
       <Portal>
         <Dialog
           visible={dialogSair}
-          onDismiss={() => setDialogSair(false)}>
-          <Dialog.Title>Confirmar saída</Dialog.Title>
+          onDismiss={() => setDialogSair(false)}
+          style={{ backgroundColor: '#181A24', borderRadius: 16 }}
+        >
+          <Dialog.Title style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
+            Encerrar Sessão
+          </Dialog.Title>
           <Dialog.Content>
-            <Text>
-              Deseja realmente sair da sua conta?
+            <Text style={{ color: '#A0A3BD' }}>
+              Deseja realmente sair da sua conta no aplicativo?
             </Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setDialogSair(false)}>
+            <Button textColor="#A0A3BD" onPress={() => setDialogSair(false)}>
               Cancelar
             </Button>
-            <Button onPress={confirmarSaida}>
+            <Button textColor="#FF5252" onPress={confirmarSaida}>
               Sair
             </Button>
           </Dialog.Actions>
@@ -144,19 +152,23 @@ const CabecalhoMenu = () => {
   );
 };
 
-
 const styles = StyleSheet.create({
-
   container: {
-    backgroundColor: '#C0C0C0',
-    paddingTop: 25,
-    paddingHorizontal: 20,
-    paddingBottom: 10,
+    backgroundColor: '#14161F',
+    paddingTop: 35,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#262A3B',
   },
 
   usuario: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#202330',
   },
 
   avatar: {
@@ -165,36 +177,78 @@ const styles = StyleSheet.create({
 
   informacoes: {
     flex: 1,
-    marginLeft: 15,
+    marginLeft: 14,
   },
 
   nome: {
     color: '#FFFFFF',
     fontWeight: 'bold',
-    fontSize: 19,
+    fontSize: 18,
+  },
+
+  roleBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+
+  roleBadgeAdmin: {
+    backgroundColor: '#F2A900',
+  },
+
+  roleBadgeUser: {
+    backgroundColor: '#262A3B',
+  },
+
+  roleText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+
+  roleTextAdmin: {
+    color: '#0F1015',
+  },
+
+  roleTextUser: {
+    color: '#A0A3BD',
   },
 
   email: {
-    color: '#FFFFFF',
-    marginTop: 3,
+    color: '#8A8D9F',
   },
 
-  perfil: {
-    marginTop: 15,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.3)',
-
+  menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    borderRadius: 8,
+    marginBottom: 4,
   },
 
-  perfilTexto: {
+  adminMenuItem: {
+    backgroundColor: '#F2A900',
+    borderRadius: 10,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    marginVertical: 6,
+  },
+
+  adminMenuTexto: {
+    color: '#0F1015',
+    fontWeight: '800',
+    fontSize: 14,
+  },
+
+  menuTexto: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontWeight: '600',
+    fontSize: 14,
   },
-
 });
 
 export { CabecalhoMenu };

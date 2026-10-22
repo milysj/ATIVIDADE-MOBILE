@@ -6,379 +6,320 @@ import { useAuth } from './services/AuthContext';
 import { UsuarioService } from './services/api';
 
 const Perfil = ({ navigation }) => {
-    const { usuario, isAutenticado, atualizarUsuario } = useAuth();
+  const { usuario, isAutenticado, isAdmin, atualizarUsuario } = useAuth();
 
-    // Dados do usuário
-    const [nome, setNome] = useState('');
-    const [email, setEmail] = useState('');
-    const [telefone, setTelefone] = useState('');
-    const [cpf, setCpf] = useState('');
-    const [senha, setSenha] = useState('');
-    const [imagem, setImagem] = useState(null);
-    const [salvando, setSalvando] = useState(false);
+  // Dados do usuário
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [cpf, setCpf] = useState('');
+  const [senha, setSenha] = useState('');
+  const [imagem, setImagem] = useState(null);
+  const [salvando, setSalvando] = useState(false);
 
-    useEffect(() => {
-        if (!isAutenticado) {
-            Alert.alert('Acesso Restrito', 'Faça login para acessar seu perfil.', [
-                { text: 'Fazer Login', onPress: () => navigation.navigate('Login') },
-            ]);
-            return;
-        }
+  useEffect(() => {
+    if (!isAutenticado) {
+      Alert.alert('Acesso Restrito', 'Faça login para acessar seu perfil.', [
+        { text: 'Fazer Login', onPress: () => navigation.navigate('Login') },
+      ]);
+      return;
+    }
 
-        if (usuario) {
-            setNome(usuario.nome || '');
-            setEmail(usuario.email || '');
-            setTelefone(usuario.telefone || '');
-            setCpf(usuario.cpf || '');
-            if (usuario.imagem) {
-                setImagem(usuario.imagem);
-            }
-        }
-    }, [usuario, isAutenticado]);
+    if (usuario) {
+      setNome(usuario.nome || '');
+      setEmail(usuario.email || '');
+      setTelefone(usuario.telefone || '');
+      setCpf(usuario.cpf || '');
+      if (usuario.imagem) {
+        setImagem(usuario.imagem);
+      }
+    }
+  }, [usuario, isAutenticado]);
 
-    // ==============================
-    // ESCOLHER IMAGEM
-    // ==============================
-    const editarFoto = async () => {
-        const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  // Escolher Imagem
+  const editarFoto = async () => {
+    const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-        if (!permissao.granted) {
-            Alert.alert('Permissão necessária', 'Precisamos de permissão para acessar suas fotos.');
-            return;
-        }
+    if (!permissao.granted) {
+      Alert.alert('Permissão necessária', 'Precisamos de permissão para acessar suas fotos.');
+      return;
+    }
 
-        const resultado = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-        });
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
 
-        if (!resultado.canceled) {
-            setImagem(resultado.assets[0].uri);
-        }
-    };
+    if (!resultado.canceled) {
+      setImagem(resultado.assets[0].uri);
+    }
+  };
 
-    // ==============================
-    // SALVAR PERFIL (PUT /api/usuarios/:id)
-    // ==============================
-    const salvarPerfil = async () => {
-        if (!usuario?._id && !usuario?.id) {
-            Alert.alert('Erro', 'Usuário não identificado.');
-            return;
-        }
+  // Salvar Perfil
+  const salvarPerfil = async () => {
+    if (!usuario?._id && !usuario?.id) {
+      Alert.alert('Erro', 'Usuário não identificado.');
+      return;
+    }
 
-        setSalvando(true);
-        try {
-            const userId = usuario._id || usuario.id;
-            const payload = {
-                nome,
-                email,
-                telefone,
-                cpf,
-                imagem: imagem || '',
-                ...(senha ? { senha } : {}),
-            };
+    setSalvando(true);
+    try {
+      const userId = usuario._id || usuario.id;
+      const payload = {
+        nome,
+        email,
+        telefone,
+        cpf,
+        imagem: imagem || '',
+        ...(senha ? { senha } : {}),
+      };
 
-            const res = await UsuarioService.atualizar(userId, payload);
-            if (res.sucesso) {
-                atualizarUsuario(res.dados);
-                setSenha('');
-                Alert.alert('Sucesso', 'Perfil atualizado com sucesso no banco de dados!');
-            }
-        } catch (error) {
-            Alert.alert('Erro', error.message || 'Falha ao atualizar perfil.');
-        } finally {
-            setSalvando(false);
-        }
-    };
+      const res = await UsuarioService.atualizar(userId, payload);
+      if (res.sucesso) {
+        atualizarUsuario(res.dados);
+        setSenha('');
+        Alert.alert('Sucesso', 'Perfil atualizado com sucesso no banco de dados!');
+      }
+    } catch (error) {
+      Alert.alert('Erro', error.message || 'Falha ao atualizar perfil.');
+    } finally {
+      setSalvando(false);
+    }
+  };
 
+  return (
+    <ScrollView style={styles.container}>
+      {/* CABEÇALHO */}
+      <View style={styles.cabecalho}>
+        {/* AVATAR */}
+        <View style={styles.avatarContainer}>
+          {imagem ? (
+            <Image source={{ uri: imagem }} style={styles.avatarImagem} />
+          ) : (
+            <Avatar.Icon
+              size={100}
+              icon={isAdmin ? 'crown' : 'account'}
+              style={styles.avatar}
+              color="#0F1015"
+            />
+          )}
+          {/* BOTÃO EDITAR FOTO */}
+          <IconButton
+            icon="camera"
+            iconColor="#FFFFFF"
+            size={18}
+            style={styles.botaoEditar}
+            onPress={editarFoto}
+          />
+        </View>
 
-    return (
-        <ScrollView style={styles.container}>
-            {/* CABEÇALHO */}
-            <View style={styles.cabecalho}>
-                {/* AVATAR */}
-                <View style={styles.avatarContainer}>
-                    { imagem ?( 
-                          // Mostra a imagem escolhida
-                        <Image
-                            source={{ uri: imagem }}
-                            style={styles.avatarImagem}
-                        />) : (
-                        // Avatar padrão
-                        <Avatar.Icon
-                            size={100}
-                            icon="account"
-                            style={styles.avatar}
-                        />
+        {/* TÍTULO & ROLE */}
+        <Text variant="headlineSmall" style={styles.titulo}>
+          {nome || 'Meu Perfil'}
+        </Text>
 
-                    )}
-                    {/* BOTÃO EDITAR */}
-                    <IconButton
-                        icon="pencil"
-                        iconColor="white"
-                        size={18}
-                        style={styles.botaoEditar}
-                        onPress={editarFoto}
-                    />
+        <View style={[styles.roleBadge, isAdmin ? styles.roleBadgeAdmin : styles.roleBadgeUser]}>
+          <Text style={[styles.roleText, isAdmin ? styles.roleTextAdmin : styles.roleTextUser]}>
+            {isAdmin ? '👑 ADMINISTRADOR' : '👤 USUÁRIO PADRÃO'}
+          </Text>
+        </View>
 
-                </View>
+        <Text style={styles.subtitulo}>{email}</Text>
+      </View>
 
+      <Divider style={{ backgroundColor: '#262A3B' }} />
 
-                {/* TÍTULO */}
+      {/* FORMULÁRIO */}
+      <View style={styles.formulario}>
+        <TextInput
+          label="Nome Completo"
+          value={nome}
+          onChangeText={setNome}
+          mode="outlined"
+          textColor="#FFFFFF"
+          left={<TextInput.Icon icon="account" iconColor="#F2A900" />}
+          style={styles.input}
+        />
 
-                <Text
-                    variant="headlineSmall"
-                    style={styles.titulo}
-                >
-                    Meu Perfil
-                </Text>
+        <TextInput
+          label="E-mail"
+          value={email}
+          onChangeText={setEmail}
+          mode="outlined"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          textColor="#FFFFFF"
+          left={<TextInput.Icon icon="email" iconColor="#F2A900" />}
+          style={styles.input}
+        />
 
+        <TextInput
+          label="Telefone"
+          value={telefone}
+          onChangeText={setTelefone}
+          mode="outlined"
+          keyboardType="phone-pad"
+          textColor="#FFFFFF"
+          left={<TextInput.Icon icon="phone" iconColor="#F2A900" />}
+          style={styles.input}
+        />
 
-                <Text style={styles.subtitulo}>
-                    Atualize seus dados pessoais
-                </Text>
+        <TextInput
+          label="CPF"
+          value={cpf}
+          onChangeText={setCpf}
+          mode="outlined"
+          keyboardType="numeric"
+          textColor="#FFFFFF"
+          left={<TextInput.Icon icon="card-account-details" iconColor="#F2A900" />}
+          style={styles.input}
+        />
 
-            </View>
+        <TextInput
+          label="Nova Senha (deixe em branco para não alterar)"
+          value={senha}
+          onChangeText={setSenha}
+          mode="outlined"
+          secureTextEntry
+          textColor="#FFFFFF"
+          left={<TextInput.Icon icon="lock" iconColor="#F2A900" />}
+          style={styles.input}
+        />
 
+        {/* SALVAR */}
+        <Button
+          mode="contained"
+          icon="content-save"
+          buttonColor="#F2A900"
+          textColor="#0F1015"
+          loading={salvando}
+          disabled={salvando}
+          onPress={salvarPerfil}
+          style={styles.botao}
+          labelStyle={{ fontWeight: '800', fontSize: 15 }}
+        >
+          Salvar Alterações
+        </Button>
 
-            <Divider />
-
-
-            {/* ============================= */}
-            {/* FORMULÁRIO */}
-            {/* ============================= */}
-
-            <View style={styles.formulario}>
-
-                {/* NOME */}
-
-                <TextInput
-                    label="Nome"
-                    value={nome}
-                    onChangeText={setNome}
-                    mode="outlined"
-                    left={
-                        <TextInput.Icon icon="account" />
-                    }
-                    style={styles.input}
-                />
-
-
-                {/* E-MAIL */}
-
-                <TextInput
-                    label="E-mail"
-                    value={email}
-                    onChangeText={setEmail}
-                    mode="outlined"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    left={
-                        <TextInput.Icon icon="email" />
-                    }
-                    style={styles.input}
-                />
-
-
-                {/* TELEFONE */}
-
-                <TextInput
-                    label="Telefone"
-                    value={telefone}
-                    onChangeText={setTelefone}
-                    mode="outlined"
-                    keyboardType="phone-pad"
-                    left={
-                        <TextInput.Icon icon="phone" />
-                    }
-                    style={styles.input}
-                />
-
-
-                {/* CPF */}
-
-                <TextInput
-                    label="CPF"
-                    value={cpf}
-                    onChangeText={setCpf}
-                    mode="outlined"
-                    keyboardType="numeric"
-                    left={
-                        <TextInput.Icon icon="card-account-details" />
-                    }
-                    style={styles.input}
-                />
-
-
-                {/* NOVA SENHA */}
-
-                <TextInput
-                    label="Nova senha"
-                    value={senha}
-                    onChangeText={setSenha}
-                    mode="outlined"
-                    secureTextEntry
-                    left={
-                        <TextInput.Icon icon="lock" />
-                    }
-                    style={styles.input}
-                />
-
-
-                {/* ============================= */}
-                {/* SALVAR */}
-                {/* ============================= */}
-
-                <Button
-                    mode="contained"
-                    icon="content-save"
-                    loading={salvando}
-                    disabled={salvando}
-                    onPress={salvarPerfil}
-                    style={styles.botao}
-                >
-                    Salvar alterações
-                </Button>
-
-
-                {/* ============================= */}
-                {/* VOLTAR */}
-                {/* ============================= */}
-
-                <Button
-                    mode="outlined"
-                    icon="arrow-left"
-                    onPress={() => navigation.goBack()}
-                    style={styles.botaoVoltar}
-                >
-                    Voltar
-                </Button>
-
-            </View>
-
-        </ScrollView>
-    );
+        {/* VOLTAR */}
+        <Button
+          mode="outlined"
+          icon="arrow-left"
+          textColor="#FFFFFF"
+          onPress={() => navigation.goBack()}
+          style={styles.botaoVoltar}
+        >
+          Voltar para o Início
+        </Button>
+      </View>
+    </ScrollView>
+  );
 };
 
-
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0F1015',
+  },
 
-    container: {
-        flex: 1,
-        backgroundColor: '#F5F5F5',
-    },
+  cabecalho: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    backgroundColor: '#14161F',
+  },
 
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 12,
+  },
 
-    // ==============================
-    // CABEÇALHO
-    // ==============================
+  avatar: {
+    backgroundColor: '#F2A900',
+  },
 
-    cabecalho: {
-        alignItems: 'center',
-        paddingVertical: 30,
-        backgroundColor: '#C0C0C0',
-    },
+  avatarImagem: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: '#F2A900',
+  },
 
+  botaoEditar: {
+    position: 'absolute',
+    right: -6,
+    bottom: -6,
+    backgroundColor: '#262A3B',
+    margin: 0,
+    borderWidth: 2,
+    borderColor: '#F2A900',
+  },
 
-    // ==============================
-    // AVATAR
-    // ==============================
+  titulo: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 22,
+  },
 
-    avatarContainer: {
-        position: 'relative',
-        marginBottom: 10,
-    },
+  subtitulo: {
+    color: '#A0A3BD',
+    marginTop: 4,
+    fontSize: 14,
+  },
 
+  roleBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 8,
+    marginTop: 6,
+    marginBottom: 2,
+  },
 
-    avatar: {
-        backgroundColor: '#F2A900',
-    },
+  roleBadgeAdmin: {
+    backgroundColor: '#F2A900',
+  },
 
+  roleBadgeUser: {
+    backgroundColor: '#262A3B',
+  },
 
-    // Imagem escolhida
-    avatarImagem: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        borderWidth: 3,
-        borderColor: '#FFFFFF',
-    },
+  roleText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
 
+  roleTextAdmin: {
+    color: '#0F1015',
+  },
 
-    // ==============================
-    // BOTÃO EDITAR
-    // ==============================
+  roleTextUser: {
+    color: '#A0A3BD',
+  },
 
-    botaoEditar: {
-        position: 'absolute',
+  formulario: {
+    padding: 20,
+  },
 
-        right: -8,
-        bottom: -8,
+  input: {
+    marginBottom: 14,
+    backgroundColor: '#181A24',
+  },
 
-        backgroundColor: '#555555',
+  botao: {
+    marginTop: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
 
-        margin: 0,
-
-        borderWidth: 2,
-        borderColor: '#FFFFFF',
-    },
-
-
-    // ==============================
-    // TÍTULO
-    // ==============================
-
-    titulo: {
-        color: '#FFFFFF',
-        fontWeight: 'bold',
-    },
-
-
-    subtitulo: {
-        color: '#FFFFFF',
-        marginTop: 5,
-    },
-
-
-    // ==============================
-    // FORMULÁRIO
-    // ==============================
-
-    formulario: {
-        padding: 20,
-    },
-
-
-    input: {
-        marginBottom: 15,
-        backgroundColor: '#FFFFFF',
-    },
-
-
-    // ==============================
-    // BOTÃO SALVAR
-    // ==============================
-
-    botao: {
-        marginTop: 10,
-        paddingVertical: 5,
-        backgroundColor: '#F2A900',
-    },
-
-
-    // ==============================
-    // BOTÃO VOLTAR
-    // ==============================
-
-    botaoVoltar: {
-        marginTop: 15,
-        paddingVertical: 5,
-    },
-
+  botaoVoltar: {
+    marginTop: 14,
+    marginBottom: 30,
+    borderRadius: 10,
+    borderColor: '#303448',
+    paddingVertical: 4,
+  },
 });
 
-
 export { Perfil };
-

@@ -91,8 +91,16 @@ export const AuthService = {
 };
 
 export const ConteudoService = {
-  listar: (termoBusca = '') => {
-    const endpoint = termoBusca ? `/conteudos?busca=${encodeURIComponent(termoBusca)}` : '/conteudos';
+  listar: (termoBusca = '', categoria = '') => {
+    const params = [];
+    if (termoBusca && termoBusca.trim() !== '') {
+      params.push(`busca=${encodeURIComponent(termoBusca.trim())}`);
+    }
+    if (categoria && categoria !== 'TODOS' && categoria.trim() !== '') {
+      params.push(`categoria=${encodeURIComponent(categoria.trim())}`);
+    }
+    const queryString = params.join('&');
+    const endpoint = queryString ? `/conteudos?${queryString}` : '/conteudos';
     return api.get(endpoint);
   },
   buscarPorId: (id) => api.get(`/conteudos/${id}`),

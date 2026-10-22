@@ -37,7 +37,7 @@ export const authMiddleware = (
   }
 
   const token = parts[1];
-  const secret = process.env.JWT_SECRET || 'chave_secreta_super_segura_para_jwt_token';
+  const secret = process.env.JWT_SECRET || 'eunaoseioquecolocaraquisecreto';
 
   try {
     const decoded = jwt.verify(token, secret) as JwtPayload;
@@ -52,3 +52,19 @@ export const authMiddleware = (
     return;
   }
 };
+
+export const adminMiddleware = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (req.userRole !== 'admin') {
+    res.status(403).json({
+      sucesso: false,
+      mensagem: 'Acesso restrito. Apenas administradores podem executar esta operação.',
+    });
+    return;
+  }
+  next();
+};
+

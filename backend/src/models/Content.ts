@@ -1,15 +1,33 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
+export interface IEpisodio {
+  numero: number;
+  titulo: string;
+  duracao?: string;
+  descricao?: string;
+}
+
 export interface IContent extends Document {
   titulo: string;
   subtitulo: string;
   imagem: string;
   descricao?: string;
   categoria?: string;
+  episodios?: IEpisodio[];
   usuario?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
+
+const episodioSchema = new Schema<IEpisodio>(
+  {
+    numero: { type: Number, required: true },
+    titulo: { type: String, required: true, trim: true },
+    duracao: { type: String, default: '45 min', trim: true },
+    descricao: { type: String, default: '', trim: true },
+  },
+  { _id: false }
+);
 
 const contentSchema = new Schema<IContent>(
   {
@@ -38,6 +56,10 @@ const contentSchema = new Schema<IContent>(
       default: 'Séries',
       trim: true,
     },
+    episodios: {
+      type: [episodioSchema],
+      default: [],
+    },
     usuario: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -53,3 +75,4 @@ const contentSchema = new Schema<IContent>(
 contentSchema.index({ titulo: 'text', subtitulo: 'text', descricao: 'text' });
 
 export const Content = model<IContent>('Content', contentSchema);
+

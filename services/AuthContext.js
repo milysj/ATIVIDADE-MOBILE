@@ -59,6 +59,7 @@ export const AuthProvider = ({ children }) => {
       value={{
         usuario,
         isAutenticado: !!usuario,
+        isAdmin: usuario?.role === 'admin',
         loadingAuth,
         login,
         cadastrar,

@@ -76,7 +76,7 @@ export class ContentController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { titulo, subtitulo, imagem, descricao, categoria } = req.body;
+      const { titulo, subtitulo, imagem, descricao, categoria, episodios } = req.body;
 
       if (!titulo || !subtitulo || !imagem) {
         res.status(400).json({
@@ -92,6 +92,7 @@ export class ContentController {
         imagem,
         descricao: descricao || '',
         categoria: categoria || 'Séries',
+        episodios: Array.isArray(episodios) ? episodios : [],
         usuario: req.userId || null,
       });
 
@@ -115,7 +116,7 @@ export class ContentController {
   ): Promise<void> {
     try {
       const { id } = req.params;
-      const { titulo, subtitulo, imagem, descricao, categoria } = req.body;
+      const { titulo, subtitulo, imagem, descricao, categoria, episodios } = req.body;
 
       const conteudo = await Content.findById(id);
 
@@ -132,6 +133,7 @@ export class ContentController {
       if (imagem !== undefined) conteudo.imagem = imagem;
       if (descricao !== undefined) conteudo.descricao = descricao;
       if (categoria !== undefined) conteudo.categoria = categoria;
+      if (episodios !== undefined) conteudo.episodios = Array.isArray(episodios) ? episodios : [];
 
       await conteudo.save();
 

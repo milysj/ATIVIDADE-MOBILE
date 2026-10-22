@@ -2,32 +2,28 @@ import { useEffect, useState } from 'react';
 import SplashScreen from './SplashScreen';
 
 import { View } from 'react-native';
-//React Navigation
+// React Navigation
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createDrawerNavigator,  DrawerContentScrollView } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView } from '@react-navigation/drawer';
 
-import { styles } from './css/Styles';
-import { PaperProvider, Provider, Avatar, Text, } from 'react-native-paper';
+import { PaperProvider } from 'react-native-paper';
 import { theme } from './theme/theme';
 
-// AppBar
+// AppBar (Home)
 import AppBar from './AppBar';
 // Rotas
 import Pesquisa from './Pesquisa';
-// Acesso
 import Acesso from './Acesso';
-//Login 
 import Login from './Login';
-//Cadastro
 import Cadastro from './Cadastro';
-// Perfil
 import { Perfil } from './Perfil';
-// cabeçalho do menu
+import DetalhesCard from './DetalhesCard';
+import Admin from './Admin';
+// Cabeçalho do menu lateral
 import { CabecalhoMenu } from './CabecaMenu';
 // Contexto de Autenticação
 import { AuthProvider } from './services/AuthContext';
-
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -36,10 +32,14 @@ function DrawerNavigation() {
   return (
     <Drawer.Navigator 
       screenOptions={{
-        headerShown: false
+        headerShown: false,
+        drawerStyle: {
+          backgroundColor: '#0F1015',
+          width: 300,
+        },
       }}
       drawerContent={(props) => (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: '#0F1015' }}>
           <CabecalhoMenu />
           <DrawerContentScrollView {...props} />
         </View>
@@ -48,10 +48,16 @@ function DrawerNavigation() {
       <Drawer.Screen
         name="Início"
         component={AppBar}
+        options={{
+          drawerLabelStyle: { color: '#FFFFFF', fontWeight: 'bold' },
+        }}
       />
       <Drawer.Screen
-        name="Séries"
-        component={AppBar}
+        name="Admin"
+        component={Admin}
+        options={{
+          drawerItemStyle: { display: 'none' },
+        }}
       />
     </Drawer.Navigator>
   );
@@ -62,10 +68,13 @@ function RootNavigator() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
+        contentStyle: { backgroundColor: '#0F1015' },
       }}
     >
       <Stack.Screen name="MainDrawer" component={DrawerNavigation} />
       <Stack.Screen name="Home" component={DrawerNavigation} />
+      <Stack.Screen name="DetalhesCard" component={DetalhesCard} />
+      <Stack.Screen name="Admin" component={Admin} />
       <Stack.Screen name="Pesquisa" component={Pesquisa} />
       <Stack.Screen name="Acesso" component={Acesso} />
       <Stack.Screen name="Login" component={Login} />
@@ -79,11 +88,11 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => { setLoading(false); }, 2000);
+    setTimeout(() => { setLoading(false); }, 1500);
   }, []);
 
   if (loading) {
-    return (<SplashScreen />)
+    return <SplashScreen />;
   }
 
   return (
@@ -96,5 +105,3 @@ export default function App() {
     </PaperProvider>
   );
 }
-
-
